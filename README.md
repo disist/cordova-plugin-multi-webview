@@ -1,5 +1,5 @@
 
-# cordova-plugin-webview
+# cordova-plugin-multi-webview
 embeded webview for cordova app
 
 This plugin is different with inappbrowser, You can load html page or external urls in the embeded webview, and control it directly.
@@ -15,15 +15,16 @@ This plugin was originally commissioned by [ZeGenie Inc] [ze].
 ### Method
   - cordova.EbWebview.open(url, param)
 ```sh    
-app.webview = cordova.EbWebview.open(encodeURI('http://www.bing.com'), 'left='+app.left+',top='+app.top+',width=320,height=200');
+app.webview = cordova.EbWebview.open(0,encodeURI('http://www.bing.com'), 'left='+app.left+',top='+app.top+',width=320,height=200');
 ```
-  - load(url)
-  - show(), hide()
-  - setPosition(left, top)
-  - setSize(width, height)
-  - addEventListener(eventName, callback)
-  - removeEventListenenr(eventName, callback)
-  - executScript(injection, callback)
+n=browser number [0..5]
+  - load(n,url)
+  - show(n), hide(n)
+  - setPosition(n,left, top)
+  - setSize(n,width, height)
+  - addEventListener(n,eventName, callback)
+  - removeEventListenenr(n,eventName, callback)
+  - executScript(n,injection, callback)
 
 ### Sample
 [Here is sample javascript file] [sample]
