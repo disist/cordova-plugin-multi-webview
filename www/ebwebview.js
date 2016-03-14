@@ -45,9 +45,6 @@ EbWebview.prototype = {
             this.channels[event.type].fire(event);
         }
     },
-    init: function (n,eventname) {
-        exec(null, null, "EbWebview", "init", [n]);
-    },
 	close: function (n,eventname) {
         exec(null, null, "EbWebview", "close", [n]);
     },
@@ -65,6 +62,12 @@ EbWebview.prototype = {
     },
     setSize: function (n,width, height) {
       exec(null, null, "EbWebview", "setSize", [n,width, height]);
+    },
+	hasHistory: function (n,callback) {
+      exec(callback, callback, "EbWebview", "hasHistory", [n]);
+    },
+	goBack: function (n) {
+      exec(null, null, "EbWebview", "goBack", [n]);
     },
     getScreenshot: function (n,quality, callback) {
       exec(callback, callback, "EbWebview", "getScreenshot", [n,quality]);
