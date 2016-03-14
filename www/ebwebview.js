@@ -45,7 +45,10 @@ EbWebview.prototype = {
             this.channels[event.type].fire(event);
         }
     },
-    close: function (n,eventname) {
+    init: function (n,eventname) {
+        exec(null, null, "EbWebview", "init", [n]);
+    },
+	close: function (n,eventname) {
         exec(null, null, "EbWebview", "close", [n]);
     },
     load: function (n,url) {
