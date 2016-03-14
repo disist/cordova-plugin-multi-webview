@@ -17,7 +17,7 @@ This plugin was originally commissioned by [ZeGenie Inc] [ze].
 ### Method
   - cordova.EbWebview.open(n,url, param)
 ```sh    
-app.webview = cordova.EbWebview.open(0,encodeURI('http://www.bing.com'), 'left='+app.left+',top='+app.top+',width=320,height=200');
+app.webview = cordova.EbWebview.open(0,encodeURI('http://webkam.com'), 'left='+app.left+',top='+app.top+',width=320,height=200');
 ```
 n=browser number [0..5]
   - load(n,url)
