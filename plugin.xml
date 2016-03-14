@@ -20,7 +20,7 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
            id="cordova-plugin-ebwebview"
-      version="1.0.1-dev">
+      version="2.0.0-dev">
 
     <name>EbWebview</name>
     <description>Cordova Embedded Webview Plugin</description>
