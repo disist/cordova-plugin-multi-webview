@@ -11,6 +11,8 @@ This plugin was originally commissioned by [ZeGenie Inc] [ze].
 
 ### Install
     cordova plugin add https://github.com/janpekarguru/cordova-plugin-multi-webview
+### Remove
+    cordova plugin remove cordova-plugin-ebwebview
 
 ### Method
   - cordova.EbWebview.open(n,url, param)
