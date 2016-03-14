@@ -13,7 +13,7 @@ This plugin was originally commissioned by [ZeGenie Inc] [ze].
     cordova plugin add https://github.com/janpekarguru/cordova-plugin-multi-webview
 
 ### Method
-  - cordova.EbWebview.open(url, param)
+  - cordova.EbWebview.open(n,url, param)
 ```sh    
 app.webview = cordova.EbWebview.open(0,encodeURI('http://www.bing.com'), 'left='+app.left+',top='+app.top+',width=320,height=200');
 ```
