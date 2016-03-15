@@ -14,6 +14,9 @@ This plugin was originally commissioned by [ZeGenie Inc] [ze].
 ### Remove
     cordova plugin remove cordova-plugin-ebwebview
 
+Add whis plugin so iOS will use WkWebView with this plugin
+https://github.com/apache/cordova-plugin-wkwebview-engine
+
 ### Method
   - cordova.EbWebview.open(n,url, param)
 ```sh    
@@ -27,10 +30,19 @@ n=browser number [0..5]
   - addEventListener(n,eventName, callback)
   - removeEventListenenr(n,eventName, callback)
   - executScript(n,injection, callback)
+  - hasHistory: function (n,callback) 
+  - goBack: function (n)
+  - getScreenshot: function (n,quality, callback)
+  - addEventListener: function (n,eventname,f)
+  - removeEventListener: function(n,eventname, f)
+  - executeScript: function(n,injectDetails, cb)
+  - insertCSS: function(n,injectDetails, cb)
+     
+	
 
-### Sample
-[Here is sample javascript file] [sample]
 
-   [PlDb]: <https://github.com/joemccann/dillinger/tree/master/plugins/dropbox/README.md>
-   [sample]: <https://github.com/covernal/cordova-plugin-webview/blob/master/sample/index.js>
+
+
+   
+   
    [ze]: <http://www.zegenie.com>
