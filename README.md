@@ -29,7 +29,6 @@ n=browser number [0..5]
   - setSize(n,width, height)
   - addEventListener(n,eventName, callback)
   - removeEventListenenr(n,eventName, callback)
-  - executScript(n,injection, callback)
   - hasHistory: function (n,callback) 
   - goBack: function (n)
   - getScreenshot: function (n,quality, callback)
