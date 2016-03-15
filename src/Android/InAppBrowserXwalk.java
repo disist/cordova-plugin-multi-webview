@@ -10,6 +10,8 @@ import org.json.JSONException;
 import org.xwalk.core.XWalkView;
 import org.xwalk.core.XWalkResourceClient;
 import org.xwalk.core.XWalkCookieManager;
+import org.xwalk.core.XWalkNavigationHistory;
+
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -21,18 +23,30 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.content.Context;
+import android.app.Activity;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 public class InAppBrowserXwalk extends CordovaPlugin {
 
-    private BrowserDialog dialog;
-	private BrowserDialog d[]={null,null,null,null,null,null};
-    private XWalkView xWalkWebView;
-    private CallbackContext callbackContext;
-	private XwalkView  brw[]={null,null,null,null,null,null};
+    
+	
+	private BrowserDialog[] d;
+    private XWalkView[] brw;
+	private CallbackContext callbackContext;
+	private CallbackContext callbackContext2;
 	private int index=-1;
-
+	
+	public void init(final JSONArray data) throws JSONException {
+		
+		d=new BrowserDialog[6];
+		brw= new XWalkView[6];
+		Log.d("janp", "INIT DONE");
+		index=1;
+    }
+	
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         if(action.equals("open")) {
@@ -42,52 +56,63 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             this.callbackContext = callbackContext;
             this.loadUrl(data);
         } else if(action.equals("close")) {
-            this.closeBrowser();
+            this.closeBrowser(data);
         } else if(action.equals("show")) {
-            this.showBrowser();
+            this.showBrowser(data);
         } else if(action.equals("hide")) {
-            this.hideBrowser();
+            this.hideBrowser(data);
         } else if(action.equals("setPosition")) {
             this.setPosition(data);
         } else if(action.equals("setSize")) {
             this.setSize(data);
+		} else if(action.equals("goBack")) {
+            this.goBack(data);
+		} else if(action.equals("hasHistory")) {
+            this.hasHistory(data, callbackContext);
         } else if(action.equals("getScreenshot")) {
             this.getScreenshot(data, callbackContext);
         } else if (action.equals("injectScriptCode")) {
             String jsWrapper = null;
-            if (data.getBoolean(1)) {       // Is Wrapped JS
+			
+            if (data.getBoolean(3)) {       // Is Wrapped JS
                 jsWrapper = String.format("prompt(JSON.stringify([eval(%%s)]), 'gap-iab://%s')", callbackContext.getCallbackId());
             }
-            injectDeferredObject(data.getString(0), jsWrapper);     // JavaScript String
+            injectDeferredObject(data.getInt(0),data.getString(2), jsWrapper);     // JavaScript String
         }  else if (action.equals("injectScriptFile")) {
             String jsWrapper;
-            if (data.getBoolean(1)) {
+            if (data.getBoolean(2)) {
                 jsWrapper = String.format("(function(d) { var c = d.createElement('script'); c.src = %%s; c.onload = function() { prompt('', 'gap-iab://%s'); }; d.body.appendChild(c); })(document)", callbackContext.getCallbackId());
             } else {
                 jsWrapper = "(function(d) { var c = d.createElement('script'); c.src = %s; d.body.appendChild(c); })(document)";
             }
-            injectDeferredObject(data.getString(0), jsWrapper);
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
         } else if (action.equals("injectStyleCode")) {
             String jsWrapper;
-            if (data.getBoolean(1)) {
+            if (data.getBoolean(2)) {
                 jsWrapper = String.format("(function(d) { var c = d.createElement('style'); c.innerHTML = %%s; d.body.appendChild(c); prompt('', 'gap-iab://%s');})(document)", callbackContext.getCallbackId());
             } else {
                 jsWrapper = "(function(d) { var c = d.createElement('style'); c.innerHTML = %s; d.body.appendChild(c); })(document)";
             }
-            injectDeferredObject(data.getString(0), jsWrapper);
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
         }  else if (action.equals("injectStyleFile")) {
             String jsWrapper;
-            if (data.getBoolean(1)) {
+            if (data.getBoolean(2)) {
                 jsWrapper = String.format("(function(d) { var c = d.createElement('link'); c.rel='stylesheet'; c.type='text/css'; c.href = %%s; d.head.appendChild(c); prompt('', 'gap-iab://%s');})(document)", callbackContext.getCallbackId());
             } else {
                 jsWrapper = "(function(d) { var c = d.createElement('link'); c.rel='stylesheet'; c.type='text/css'; c.href = %s; d.head.appendChild(c); })(document)";
             }
-            injectDeferredObject(data.getString(0), jsWrapper);
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
         }
 
         return true;
     }
-
+	
+	
+	class MyXWalkView extends XWalkView {
+		public MyXWalkView(Context a, Activity b) {
+			super(a, b);
+		}
+	}
     class MyResourceClient extends XWalkResourceClient {
            MyResourceClient(XWalkView view) {
                super(view);
@@ -128,25 +153,35 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                 } catch (JSONException ex) {}
             }
     }
+	
+	
+	
 
     private void openBrowser(final JSONArray data) throws JSONException {
 		final int i=data.getInt(0);
         final String url = data.getString(1);
+		if (index==-1) this.init(data);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 // Create Dialogs.
-                //if(xWalkWebView == null) {
 				if(brw[i] == null) {
                     d[i] = new BrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
-                    brw[i] = new XWalkView(cordova.getActivity(), cordova.getActivity());
+                    brw[i] = new MyXWalkView(cordova.getActivity(), cordova.getActivity());
+					//brw[i] = new WebView(cordova.getActivity());
+					
                     XWalkCookieManager mCookieManager = new XWalkCookieManager();
                     mCookieManager.setAcceptCookie(true);
                     mCookieManager.setAcceptFileSchemeCookies(true);
                     brw[i].setResourceClient(new MyResourceClient(brw[i]));
-                }
-                brw[i].load(url, "");
-
+					
+                }else{
+					//brw[i].loadUrl(url);
+					brw[i].load(url,"");
+					return;
+				}
+                //brw[i].loadUrl(url);
+				brw[i].load(url,"");
                 int left=0, top=0, width=0, height=0;
                 float alpha=1f;
                 if(data != null && data.length() > 1) {
@@ -155,7 +190,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                         String paramString = data.getString(1);
                         String[] params = paramString.split(",");
 
-                        for (int i = 0; i < params.length; i++) {
+                        for (int i = 1; i < params.length; i++) {
                             String[] keyValue = params[i].split("=");
 
                             String paramKey = keyValue[0];
@@ -214,44 +249,46 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                brw[i].load(url, "");
+                //brw[i].loadUrl(url);
+				brw[i].load(url,"");
                 d[i].show();
             }
         });
     }
 
-    public void hideBrowser() {
-
+    public void hideBrowser(final JSONArray data) throws JSONException  {
+		final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(dialog != null) {
-                    dialog.hide();
+                if(d[i] != null) {
+                    d[i].hide();
                 }
             }
         });
     }
 
-    public void showBrowser() {
+    public void showBrowser(final JSONArray data) throws JSONException  {
+		final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(dialog != null) {
-                    dialog.show();
+                if(d[i] != null) {
+                    d[i].show();
                 }
             }
         });
     }
 
-    public void closeBrowser() {
+    public void closeBrowser(final JSONArray data) throws JSONException  {
+		final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(dialog == null)
+                if(d[i] == null)
                     return;
-
-                xWalkWebView.onDestroy();
-                dialog.dismiss();
+				brw[i].onDestroy();
+                d[i].dismiss();
                 try {
                     JSONObject obj = new JSONObject();
                     obj.put("type", "exit");
@@ -260,8 +297,8 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                     callbackContext.sendPluginResult(result);
                 } catch (JSONException ex) {}
 
-                xWalkWebView = null;
-                dialog = null;
+                brw[i] = null;
+                d[i] = null;
             }
         });
     }
@@ -283,7 +320,8 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                     lp.x = left; // The new position of the X coordinates
                     lp.y = top; // The new position of the Y coordinates
                     dialogWindow.setAttributes(lp);
-                    d[i].setContentView(xWalkWebView, lp);
+                    //d[i].setContentView(xWalkWebView, lp);
+					d[i].setContentView(brw[i], lp);
                     d[i].show();
 
             }
@@ -306,7 +344,8 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                 lp.width = width; // The new position of the X coordinates
                 lp.height = height; // The new position of the Y coordinates
                 dialogWindow.setAttributes(lp);
-                d[i].setContentView(xWalkWebView, lp);
+				//d[i].setContentView(xWalkWebView, lp);
+                d[i].setContentView(brw[i], lp);
                 d[i].show();
             }
         });
@@ -320,23 +359,25 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(dialog == null)
+                if(d[i] == null)
                     return;
 
-                Window dialogWindow = dialog.getWindow();
+                Window dialogWindow = d[i].getWindow();
 
                 WindowManager.LayoutParams lp = dialogWindow.getAttributes();
                 lp.alpha = alpha; // The new position of the X coordinates
                 dialogWindow.setAttributes(lp);
-                dialog.setContentView(xWalkWebView, lp);
-                dialog.show();
+				//d[i].setContentView(xWalkWebView, lp);
+                d[i].setContentView(brw[i], lp);
+                d[i].show();
             }
         });
     }
 
 
-    private void injectDeferredObject(String source, String jsWrapper) {
+    private void injectDeferredObject(int n,String source, String jsWrapper) {
         String scriptToInject;
+		final int n2=n;
         if (jsWrapper != null) {
             org.json.JSONArray jsonEsc = new org.json.JSONArray();
             jsonEsc.put(source);
@@ -350,33 +391,33 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                    xWalkWebView.evaluateJavascript(finalScriptToInject, null);
+                    brw[n2].evaluateJavascript(finalScriptToInject, null);
             }
         });
     }
     // Get the screenshot of the browser dialog.
     // Params : JPEG Quality, and what to do callback.
     public void getScreenshot(JSONArray data, CallbackContext _callbackContext)  throws JSONException {
-        float fq =  (float) data.getDouble(0);
-        callbackContext = _callbackContext;
+		final int i=data.getInt(0);
+        float fq =  (float) data.getDouble(1);
+        callbackContext2 = _callbackContext;
+		
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
-                if(dialog == null)
+                if(d[i] == null)
                     return;
 
-                Window dialogWindow = dialog.getWindow();
-
+                Window dialogWindow = d[i].getWindow();
                 Bitmap bitmap;
-
-                bitmap = getBitmapFromView(xWalkWebView);
+				bitmap = getBitmapFromView(brw[i]);
                 String base64Image = bitMapToString(bitmap);
-
-                // Call callback for the Javascript.
-                PluginResult result = new PluginResult(PluginResult.Status.OK, base64Image);
-                result.setKeepCallback(true);
-                callbackContext.sendPluginResult(result);
+		
+				PluginResult result = new PluginResult(PluginResult.Status.OK, base64Image);
+				result.setKeepCallback(true);
+				callbackContext2.sendPluginResult(result);
+		
             }
         });
     }
@@ -422,4 +463,50 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         }
         return temp;
     }
+	
+	
+	// Chack if browser has history
+    // Params : browser window and what to do callback.
+    public void hasHistory(JSONArray data, CallbackContext _callbackContext)  throws JSONException {
+		final int i=data.getInt(0);
+		callbackContext2 = _callbackContext;
+		this.cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+				String ret="0";
+                if (brw[i]==null) {
+					PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
+					result.setKeepCallback(true);
+					callbackContext.sendPluginResult(result);
+				}
+				
+				Boolean res = brw[i].getNavigationHistory().canGoBack();
+				if (res) {ret="1";}
+				
+				PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
+				result.setKeepCallback(true);
+				callbackContext2.sendPluginResult(result);
+            }
+        });
+		
+		
+		
+    }
+	
+	
+	// goBack in history
+    public void goBack(JSONArray data) throws JSONException {
+		final int i=data.getInt(0);
+		this.cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                if (brw[i]==null) return;
+		
+				if (brw[i].getNavigationHistory().canGoBack())
+					brw[i].getNavigationHistory().navigate(XWalkNavigationHistory.Direction.BACKWARD, 1);
+					}
+        });
+    }
+	
 }
