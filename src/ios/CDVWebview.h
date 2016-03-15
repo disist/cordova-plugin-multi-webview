@@ -35,6 +35,8 @@
 }
 
 @property (nonatomic, strong) CDVEmbeddedWebViewPlug* webplug;
+@property (nonatomic, strong) NSMutableArray *brw;
+@property (nonatomic) int *index;
 @property (nonatomic, copy) NSString* callbackId;
 
 @property (nonatomic, copy) NSRegularExpression *callbackIdPattern;
@@ -49,6 +51,8 @@
 - (void)setSize:(CDVInvokedUrlCommand*)command;
 
 - (void)getScreenshot:(CDVInvokedUrlCommand*)command;
+- (void)hasHistory:(CDVInvokedUrlCommand*)command;
+- (void)goBack:(CDVInvokedUrlCommand*)command;
 
 - (void)injectScriptCode:(CDVInvokedUrlCommand*)command;
 - (void)injectScriptFile:(CDVInvokedUrlCommand*)command;
