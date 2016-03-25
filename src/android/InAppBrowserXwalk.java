@@ -53,7 +53,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             this.callbackContext = callbackContext;
             this.openBrowser(data);
         } else if(action.equals("load")) {
-            this.callbackContext = callbackContext;
+            //this.callbackContext = callbackContext;
             this.loadUrl(data);
         } else if(action.equals("close")) {
             this.closeBrowser(data);
