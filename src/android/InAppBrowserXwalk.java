@@ -34,7 +34,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     
 	
 	private BrowserDialog[] d;
-    private XWalkView[] brw;
+    	private XWalkView[] brw;
 	private CallbackContext callbackContext;
 	private CallbackContext callbackContext2;
 	private int index=-1;
@@ -158,30 +158,29 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 	
 
     private void openBrowser(final JSONArray data) throws JSONException {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
         final String url = data.getString(1);
-		if (index==-1) this.init(data);
+	if (index==-1) this.init(data);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 // Create Dialogs.
-				if(brw[i] == null) {
-                    d[i] = new BrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
-                    brw[i] = new MyXWalkView(cordova.getActivity(), cordova.getActivity());
-					//brw[i] = new WebView(cordova.getActivity());
+		if(brw[i] == null) {
+                    	d[i] = new BrowserDialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
+                    	brw[i] = new MyXWalkView(cordova.getActivity(), cordova.getActivity());
+			//brw[i] = new WebView(cordova.getActivity());
 					
-                    XWalkCookieManager mCookieManager = new XWalkCookieManager();
-                    mCookieManager.setAcceptCookie(true);
-                    mCookieManager.setAcceptFileSchemeCookies(true);
-                    brw[i].setResourceClient(new MyResourceClient(brw[i]));
-					
+                    	XWalkCookieManager mCookieManager = new XWalkCookieManager();
+                    	mCookieManager.setAcceptCookie(true);
+                    	mCookieManager.setAcceptFileSchemeCookies(true);
+                    	brw[i].setResourceClient(new MyResourceClient(brw[i]));
                 }else{
-					//brw[i].loadUrl(url);
-					brw[i].load(url,"");
-					return;
-				}
+			//brw[i].loadUrl(url);
+			brw[i].load(url,"");
+			return;
+		}
                 //brw[i].loadUrl(url);
-				brw[i].load(url,"");
+		brw[i].load(url,"");
                 int left=0, top=0, width=0, height=0;
                 float alpha=1f;
                 if(data != null && data.length() > 1) {
@@ -239,7 +238,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     }
 
     public void loadUrl(final JSONArray data) throws JSONException {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
 		
         if(d[i] == null) {
             openBrowser(data);
@@ -250,14 +249,14 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             @Override
             public void run() {
                 //brw[i].loadUrl(url);
-				brw[i].load(url,"");
+		brw[i].load(url,"");
                 d[i].show();
             }
         });
     }
 
     public void hideBrowser(final JSONArray data) throws JSONException  {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -269,7 +268,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     }
 
     public void showBrowser(final JSONArray data) throws JSONException  {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -281,7 +280,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     }
 
     public void closeBrowser(final JSONArray data) throws JSONException  {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -305,7 +304,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 
     // Set the left and top parameter. Data : LEFT, TOP
     public void setPosition(JSONArray data) throws JSONException {
-		final int i=data.getInt(0);
+	final int i=data.getInt(0);
         final int left = data.getInt(1);
         final int top = data.getInt(2);
 
