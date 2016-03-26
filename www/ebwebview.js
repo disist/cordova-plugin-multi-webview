@@ -1,6 +1,3 @@
-
-cordova.define("cordova-plugin-ebwebview.ebwebview", function(require, exports, module) {
-	
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -131,6 +128,3 @@ module.exports = function(n,strUrl, strWindowFeatures, callbacks) {
     exec(cb, cb, "EbWebview", "open", [n,strUrl, strWindowFeatures]);
     return iab;
 };
-
-});
-/* end of file */
