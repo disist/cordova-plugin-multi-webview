@@ -130,6 +130,4 @@ module.exports = function(n,strUrl, strWindowFeatures, callbacks) {
     return iab;
 };
 
-
-
 });
