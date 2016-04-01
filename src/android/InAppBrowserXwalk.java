@@ -398,9 +398,12 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     }
     // Get the screenshot of the browser dialog.
     // Params : JPEG Quality, and what to do callback.
+	// add to config.xml for this to work:
+	// <preference name="CrosswalkAnimatable" value="true" />
     public void getScreenshot(JSONArray data, CallbackContext _callbackContext)  throws JSONException {
 		final int i=data.getInt(0);
         float fq =  (float) data.getDouble(1);
+		final int q=Math.round(fq*100);
         callbackContext2 = _callbackContext;
 		
         this.cordova.getActivity().runOnUiThread(new Runnable() {
@@ -412,9 +415,8 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 
                 Window dialogWindow = d[i].getWindow();
                 Bitmap bitmap;
-		//bitmap = getBitmapFromView(brw[i]);
-		bitmap = getBitmap(brw[i]);
-                String base64Image = bitMapToString(bitmap);
+				bitmap = getBitmap(brw[i]);
+                String base64Image = bitMapToString(bitmap,q);
 		
 		PluginResult result = new PluginResult(PluginResult.Status.OK, base64Image);
 		result.setKeepCallback(true);
@@ -424,57 +426,32 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         });
     }
 
-    // Helper method for getting bitmap.
-    private Bitmap getBitmapFromView(View view) {
-    	
-        //Define a bitmap with the same size as the view
-        Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
-        //Bind a canvas to it
-        Canvas canvas = new Canvas(returnedBitmap);
-        //Get the view's background
-        Drawable bgDrawable = view.getBackground();
-        if (bgDrawable != null)
-            //has background drawable, then draw it on the canvas
-            bgDrawable.draw(canvas);
-        else
-            //does not have background drawable, then draw white background on the canvas
-            canvas.drawColor(Color.WHITE);
-
-        // draw the view on the canvas
-        view.draw(canvas);
-        //return the bitmap
-        return returnedBitmap;
-        
-    }
-    	// helper function for xwalk bitmap
-	private Bitmap getBitmap(view ViewXW) {
+	
+	
+	// helper function for xwalk bitmap
+	private Bitmap getBitmap(View ViewXW) {
 		Bitmap bitmap = null;
 		try {
-			TextureView textureView = findXWalkTextureView((ViewGroup)webView.getView());
-                        if (textureView != null) {
-				bitmap = textureView.getBitmap();
-                                return bitmap;
-                        }
+			TextureView textureView = findXWalkTextureView((ViewGroup)ViewXW);
+				if (textureView != null) {
+					bitmap = textureView.getBitmap();
+					return bitmap;
+				}
 		} catch(Exception e) {
 			 e.printStackTrace();
 		}
-	
-	        View view = webView.getView().getRootView();
-		view.setDrawingCacheEnabled(true);
-		bitmap = Bitmap.createBitmap(view.getDrawingCache());
-		view.setDrawingCacheEnabled(false);
+		Log.e("ERW", "getBitmap ---- bitmap from textureview failed");
 		return bitmap;
 	}
-
+	// helper function for xwalk bitmap
 	private TextureView findXWalkTextureView(ViewGroup group) {
-
 		int childCount = group.getChildCount();
 		for(int i=0;i<childCount;i++) {
 			View child = group.getChildAt(i);
 			if(child instanceof TextureView) {
 				String parentClassName = child.getParent().getClass().toString();
 				boolean isRightKindOfParent = (parentClassName.contains("XWalk"));
-				if(isRightKindOfParent) {
+				if(isRightKindOfParent || true) {
 					return (TextureView) child;
 				}
 			} else if(child instanceof ViewGroup) {
@@ -484,15 +461,14 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 				}
 			}
 		}
-		
 		return null;
 	}
 	
 	
     // Helper method for storing the bitmap image for JPEG base64.
-    private String bitMapToString(Bitmap bitmap) {
+    private String bitMapToString(Bitmap bitmap, int q) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, q, baos);
         byte[] b = baos.toByteArray();
         String temp = null;
         try {
@@ -502,7 +478,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             e.printStackTrace();
         } catch (OutOfMemoryError e) {
             baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 10, baos);
             b = baos.toByteArray();
             temp = Base64.encodeToString(b, Base64.DEFAULT);
             Log.e("EWN", "Out of memory error catched");
