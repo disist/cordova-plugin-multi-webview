@@ -9,6 +9,7 @@ import org.json.JSONException;
 
 import org.xwalk.core.XWalkView;
 import org.xwalk.core.XWalkResourceClient;
+import org.xwalk.core.XWalkUIClient;
 import org.xwalk.core.XWalkCookieManager;
 import org.xwalk.core.XWalkNavigationHistory;
 
@@ -19,16 +20,22 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.Base64;
 import android.util.Log;
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.TextureView;
 import android.view.ViewGroup;
+
 import android.content.Context;
 import android.app.Activity;
+import android.webkit.ValueCallback;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 
 public class InAppBrowserXwalk extends CordovaPlugin {
@@ -51,6 +58,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 	
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
+		if (index==-1) this.init(data);
         if(action.equals("open")) {
             this.callbackContext = callbackContext;
             this.openBrowser(data);
@@ -75,37 +83,23 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             this.getScreenshot(data, callbackContext);
         } else if (action.equals("injectScriptCode")) {
             String jsWrapper = null;
-			
-            if (data.getBoolean(2)) {       // Is Wrapped JS
-                jsWrapper = String.format("prompt(JSON.stringify([eval(%%s)]), 'gap-iab://%s')", callbackContext.getCallbackId());
+            if (data.getBoolean(2)) {       // Called with callback
+				jsWrapper = "JSON.stringify([eval(%s)])";
             }
-            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);     // JavaScript String
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper,callbackContext);     // JavaScript String
         }  else if (action.equals("injectScriptFile")) {
             String jsWrapper;
-            if (data.getBoolean(2)) {
-                jsWrapper = String.format("(function(d) { var c = d.createElement('script'); c.src = %%s; c.onload = function() { prompt('', 'gap-iab://%s'); }; d.body.appendChild(c); })(document)", callbackContext.getCallbackId());
-            } else {
-                jsWrapper = "(function(d) { var c = d.createElement('script'); c.src = %s; d.body.appendChild(c); })(document)";
-            }
-            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
+            jsWrapper = "(function(d) { var c = d.createElement('script'); c.src = %s; d.body.appendChild(c); })(document)";
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper,callbackContext);
         } else if (action.equals("injectStyleCode")) {
             String jsWrapper;
-            if (data.getBoolean(2)) {
-                jsWrapper = String.format("(function(d) { var c = d.createElement('style'); c.innerHTML = %%s; d.body.appendChild(c); prompt('', 'gap-iab://%s');})(document)", callbackContext.getCallbackId());
-            } else {
-                jsWrapper = "(function(d) { var c = d.createElement('style'); c.innerHTML = %s; d.body.appendChild(c); })(document)";
-            }
-            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
+             jsWrapper = "(function(d) { var c = d.createElement('style'); c.innerHTML = %s; d.body.appendChild(c); })(document)";
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper,callbackContext);
         }  else if (action.equals("injectStyleFile")) {
             String jsWrapper;
-            if (data.getBoolean(2)) {
-                jsWrapper = String.format("(function(d) { var c = d.createElement('link'); c.rel='stylesheet'; c.type='text/css'; c.href = %%s; d.head.appendChild(c); prompt('', 'gap-iab://%s');})(document)", callbackContext.getCallbackId());
-            } else {
-                jsWrapper = "(function(d) { var c = d.createElement('link'); c.rel='stylesheet'; c.type='text/css'; c.href = %s; d.head.appendChild(c); })(document)";
-            }
-            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper);
+            jsWrapper = "(function(d) { var c = d.createElement('link'); c.rel='stylesheet'; c.type='text/css'; c.href = %s; d.head.appendChild(c); })(document)";
+            injectDeferredObject(data.getInt(0),data.getString(1), jsWrapper,callbackContext);
         }
-
         return true;
     }
 	
@@ -116,6 +110,10 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 		}
 	}
     class MyResourceClient extends XWalkResourceClient {
+		private int i;
+		public void setIndex(int i){
+			this.i=i;
+		}
            MyResourceClient(XWalkView view) {
                super(view);
            }
@@ -126,6 +124,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                    JSONObject obj = new JSONObject();
                    obj.put("type", "loadstart");
                    obj.put("url", url);
+				   obj.put("n", String.valueOf(this.i));
                    PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
                    result.setKeepCallback(true);
                    callbackContext.sendPluginResult(result);
@@ -138,6 +137,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                    JSONObject obj = new JSONObject();
                    obj.put("type", "loadstop");
                    obj.put("url", url);
+				   obj.put("n", String.valueOf(this.i));
                    PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
                    result.setKeepCallback(true);
                    callbackContext.sendPluginResult(result);
@@ -149,6 +149,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                     JSONObject obj = new JSONObject();
                     obj.put("type", "loaderror");
                     obj.put("url", url);
+					obj.put("n", String.valueOf(this.i));
                     PluginResult result = new PluginResult(PluginResult.Status.ERROR, obj);
                     result.setKeepCallback(true);
                     callbackContext.sendPluginResult(result);
@@ -162,7 +163,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     private void openBrowser(final JSONArray data) throws JSONException {
 	final int i=data.getInt(0);
         final String url = data.getString(1);
-	if (index==-1) this.init(data);
+	
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -175,7 +176,10 @@ public class InAppBrowserXwalk extends CordovaPlugin {
                     	XWalkCookieManager mCookieManager = new XWalkCookieManager();
                     	mCookieManager.setAcceptCookie(true);
                     	mCookieManager.setAcceptFileSchemeCookies(true);
-                    	brw[i].setResourceClient(new MyResourceClient(brw[i]));
+			MyResourceClient mrc=new MyResourceClient(brw[i]);
+			mrc.setIndex(i);
+                    	brw[i].setResourceClient(mrc);
+						
                 }else{
 			//brw[i].loadUrl(url);
 			brw[i].load(url,"");
@@ -376,7 +380,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
     }
 
 
-    private void injectDeferredObject(int n,String source, String jsWrapper) {
+    private void injectDeferredObject(int n,String source, String jsWrapper,CallbackContext _callbackContext) {
         String scriptToInject;
 		final int n2=n;
         if (jsWrapper != null) {
@@ -389,10 +393,59 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             scriptToInject = source;
         }
         final String finalScriptToInject = scriptToInject;
+		callbackContext2 = _callbackContext;
         this.cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                    brw[n2].evaluateJavascript(finalScriptToInject, null);
+					Log.e("ERW", "evaluateJavascript(finalScriptToInject");
+                    brw[n2].evaluateJavascript(finalScriptToInject, new ValueCallback<String>() {
+						
+						@Override
+						public void onReceiveValue(String s) {
+						String ret="";
+							
+							JsonReader reader = new JsonReader(new StringReader(s));
+
+							// Must set lenient to parse single values
+							reader.setLenient(true);
+
+							try {
+								if(reader.peek() != JsonToken.NULL) {
+									if(reader.peek() == JsonToken.STRING) {
+										String msg = reader.nextString();
+										if(msg != null) {
+											//Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+											ret=ret.concat(msg);
+										}
+									}
+								}
+							} catch (IOException e) {
+								Log.e("TAG", "injectDifferedObject: IOException", e);
+							} finally {
+								try {
+									reader.close();
+								} catch (IOException e) {
+									// NOOP
+								}
+							}
+						/**/
+						//ret=s;
+						if (callbackContext2!=null){
+							PluginResult result = new PluginResult(PluginResult.Status.OK, ret);
+							result.setKeepCallback(true);
+							callbackContext2.sendPluginResult(result);
+						}
+							
+							
+							
+						}
+					});
+					
+					
+					
+					
+					
+					Log.e("ERW", finalScriptToInject);
             }
         });
     }
