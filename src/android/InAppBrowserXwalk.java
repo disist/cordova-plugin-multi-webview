@@ -423,6 +423,11 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 
     // Helper method for getting bitmap.
     private Bitmap getBitmapFromView(View view) {
+    	view.setDrawingCacheEnabled(true);
+	view.buildDrawingCache();
+	Bitmap bm = view.getDrawingCache();
+	return bm;
+	/*
         //Define a bitmap with the same size as the view
         Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
         //Bind a canvas to it
@@ -440,6 +445,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         view.draw(canvas);
         //return the bitmap
         return returnedBitmap;
+        */
     }
 
     // Helper method for storing the bitmap image for JPEG base64.
