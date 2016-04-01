@@ -36,11 +36,12 @@ n=browser number [0..5]
   - insertCSS: (n,injectDetails, cb)
      
 Add to config.xml for getScreenshot to work:
+```sh 
 <preference name="CrosswalkAnimatable" value="true" />	
+```
 
 
 
 
-   
    
    [ze]: <http://www.zegenie.com>
