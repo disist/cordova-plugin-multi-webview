@@ -23,6 +23,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.TextureView;
+import android.view.ViewGroup;
 import android.content.Context;
 import android.app.Activity;
 
@@ -406,16 +408,17 @@ public class InAppBrowserXwalk extends CordovaPlugin {
             public void run() {
 
                 if(d[i] == null)
-                    return;
+                	return;
 
                 Window dialogWindow = d[i].getWindow();
                 Bitmap bitmap;
-				bitmap = getBitmapFromView(brw[i]);
+		//bitmap = getBitmapFromView(brw[i]);
+		bitmap = getBitmap(brw[i]);
                 String base64Image = bitMapToString(bitmap);
 		
-				PluginResult result = new PluginResult(PluginResult.Status.OK, base64Image);
-				result.setKeepCallback(true);
-				callbackContext2.sendPluginResult(result);
+		PluginResult result = new PluginResult(PluginResult.Status.OK, base64Image);
+		result.setKeepCallback(true);
+		callbackContext2.sendPluginResult(result);
 		
             }
         });
@@ -423,11 +426,7 @@ public class InAppBrowserXwalk extends CordovaPlugin {
 
     // Helper method for getting bitmap.
     private Bitmap getBitmapFromView(View view) {
-    	view.setDrawingCacheEnabled(true);
-	view.buildDrawingCache();
-	Bitmap bm = view.getDrawingCache();
-	return bm;
-	/*
+    	
         //Define a bitmap with the same size as the view
         Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
         //Bind a canvas to it
@@ -445,9 +444,51 @@ public class InAppBrowserXwalk extends CordovaPlugin {
         view.draw(canvas);
         //return the bitmap
         return returnedBitmap;
-        */
+        
     }
+    	// helper function for xwalk bitmap
+	private Bitmap getBitmap(view ViewXW) {
+		Bitmap bitmap = null;
+		try {
+			TextureView textureView = findXWalkTextureView((ViewGroup)webView.getView());
+                        if (textureView != null) {
+				bitmap = textureView.getBitmap();
+                                return bitmap;
+                        }
+		} catch(Exception e) {
+			 e.printStackTrace();
+		}
+	
+	        View view = webView.getView().getRootView();
+		view.setDrawingCacheEnabled(true);
+		bitmap = Bitmap.createBitmap(view.getDrawingCache());
+		view.setDrawingCacheEnabled(false);
+		return bitmap;
+	}
 
+	private TextureView findXWalkTextureView(ViewGroup group) {
+
+		int childCount = group.getChildCount();
+		for(int i=0;i<childCount;i++) {
+			View child = group.getChildAt(i);
+			if(child instanceof TextureView) {
+				String parentClassName = child.getParent().getClass().toString();
+				boolean isRightKindOfParent = (parentClassName.contains("XWalk"));
+				if(isRightKindOfParent) {
+					return (TextureView) child;
+				}
+			} else if(child instanceof ViewGroup) {
+				TextureView textureView = findXWalkTextureView((ViewGroup) child);
+				if(textureView != null) {
+					return textureView;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	
     // Helper method for storing the bitmap image for JPEG base64.
     private String bitMapToString(Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
