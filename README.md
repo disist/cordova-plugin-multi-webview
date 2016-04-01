@@ -18,9 +18,9 @@ Add whis plugin so iOS will use WkWebView with this plugin
 https://github.com/apache/cordova-plugin-wkwebview-engine
 
 ### Method
-  - cordova.EbWebview.open(n,url, param)
+  - cordova.EbWebview.open(n,url, param,callbacks)
 ```sh    
-app.webview = cordova.EbWebview.open(0,encodeURI('http://webkam.com'), 'left=0,top=0,width=320,height=200');
+app.webview = cordova.EbWebview.open(0,encodeURI('http://webkam.com'), 'left=0,top=0,width=320,height=200',{loadstop:ldstop});
 ```
 n=browser number [0..5]
   - load(n,url)
@@ -29,15 +29,14 @@ n=browser number [0..5]
   - setSize(n,width, height)
   - addEventListener(n,eventName, callback)
   - removeEventListenenr(n,eventName, callback)
-  - hasHistory: function (n,callback) 
-  - goBack: function (n)
-  - getScreenshot: function (n,quality, callback)
-  - addEventListener: function (n,eventname,f)
-  - removeEventListener: function(n,eventname, f)
-  - executeScript: function(n,injectDetails, cb)
-  - insertCSS: function(n,injectDetails, cb)
+  - hasHistory: (n,callback) 
+  - goBack: (n)
+  - getScreenshot:  (n,quality, callback)
+  - executeScript: (n,injectDetails, cb)
+  - insertCSS: (n,injectDetails, cb)
      
-	
+Add to config.xml for getScreenshot to work:
+<preference name="CrosswalkAnimatable" value="true" />	
 
 
 
