@@ -6,7 +6,7 @@
     "id": "cordova-plugin-webview",
     "platforms": [
       "android",
-      "ios",
+      "ios"
     ]
   },
   "repository": {
